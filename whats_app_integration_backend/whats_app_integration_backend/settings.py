@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     'rest_framework',
    'drf_yasg',
     'whats_app',
+    'whatsapp_mock',
 ]
 
 MIDDLEWARE = [
@@ -160,3 +161,5 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.BrowsableAPIRenderer',
     ],
 }
+
+BASE_URL = 'http://localhost:8000/api/v1'
