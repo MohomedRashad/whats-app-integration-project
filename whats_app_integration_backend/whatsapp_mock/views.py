@@ -99,6 +99,7 @@ class TriggerStatusUpdateWebhookAPIView(APIView):
     """
     Simulate the triggering of a status update webhook from WhatsApp.
     """
+    permission_classes = [AllowAny]    
     
     @swagger_auto_schema(
         operation_description="Simulates the triggering of a status update webhook by sending data to an actual webhook endpoint.",
