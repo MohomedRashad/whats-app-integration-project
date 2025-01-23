@@ -8,7 +8,8 @@ class MessageSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Message
-        fields = ['id', 'sender_number', 'receiver_number', 'content', 'message_type', 'timestamp', 'status']
+        fields = ['id', 'sender_number', 'receiver_number', 'content', 'message_type', 'timestamp', 'status', 'message_id']
+        read_only_fields = ['message_id', 'status', 'timestamp']
         
     def create(self, validated_data):
         # Extract sender_number and receiver_number from validated data

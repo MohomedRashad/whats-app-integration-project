@@ -1,10 +1,11 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from datetime import timedelta
+from uuid import UUID
+from datetime import timedelta, datetime
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
-from .models import Thread
+from .models import Thread, Message
 from .serializers import MessageSerializer, ThreadSerializer, ThreadListSerializer
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -30,7 +31,7 @@ class SendMessageView(APIView):
             # Save the message and return the appropriate response
             message = serializer.save()
             return Response({
-                "id": message.id,
+                "message_id": message.message_id,
                 "thread_id": message.thread.id,
                 "sender_number": message.thread.sender_number,
                 "receiver_number": message.thread.receiver_number,
@@ -194,3 +195,138 @@ class ThreadDetailView(APIView):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
+class WhatsAppNotificationWebhookView(APIView):
+    @swagger_auto_schema(
+        operation_summary="WhatsApp Notification Webhook",
+        operation_description=(
+            "Handle notifications from WhatsApp and update the status of messages. "
+            "Supports statuses such as 'sent', 'delivered', 'read', and 'failed'."
+        ),
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "message_id": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description="Unique ID of the message as a UUID.",
+                ),
+                "status": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=(
+                        "Status of the message. Possible values are 'sent', 'delivered', 'read', and 'failed'."
+                    ),
+                    enum=["sent", "delivered", "read", "failed"],
+                ),
+            },
+            required=["message_id", "status"],
+        ),
+        responses={
+            200: openapi.Response("Status updated successfully."),
+            400: openapi.Response("Invalid request."),
+            404: openapi.Response("Message not found."),
+        },
+    )
+    def post(self, request):
+        """
+        Update the status of a message based on a webhook notification from WhatsApp.
+        """
+        data = request.data
+
+        # Validate required fields
+        message_id = data.get("message_id")
+        status_update = data.get("status")
+
+        if not message_id or not status_update:
+            return Response(
+                {"error": "Both 'message_id' and 'status' are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Validate UUID format for message_id
+        try:
+            message_id = UUID(message_id)
+        except ValueError:
+            return Response(
+                {"error": "Invalid 'message_id' format. Must be a valid UUID."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Check if status is valid
+        valid_statuses = ["sent", "delivered", "read", "failed"]
+        if status_update not in valid_statuses:
+            return Response(
+                {"error": f"Invalid status. Must be one of {valid_statuses}."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Retrieve the message and update the status
+        try:
+            message = Message.objects.get(message_id=message_id)
+            message.status = status_update
+            message.save()
+            return Response(
+                {"message": f"Message {message_id} status updated to {status_update}."},
+                status=status.HTTP_200_OK,
+            )
+        except Message.DoesNotExist:
+            return Response(
+                {"error": f"Message with ID {message_id} not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+
+class WhatsAppIncomingMessageWebhookView(APIView):
+    """
+    Webhook to handle incoming messages from WhatsApp.
+    """
+    def post(self, request):
+        try:
+            # Parse the incoming JSON payload
+            payload = request.data
+
+            # Validate required fields
+            sender_number = payload.get("sender_number")
+            receiver_number = payload.get("receiver_number")
+            message_id = payload.get("message_id")
+            content = payload.get("content", "")
+            timestamp = payload.get("timestamp")
+            message_type = payload.get("message_type", "text")
+
+            if not (sender_number and receiver_number and message_id):
+                return Response({"error": "Missing required fields."}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Check if it's a reply to an existing thread
+            thread = Thread.objects.filter(
+                sender_number=receiver_number,
+                receiver_number=sender_number
+            ).first()
+
+            if not thread:
+                # Create a new thread for a new conversation
+                thread = Thread.objects.create(
+                    sender_number=receiver_number,
+                    receiver_number=sender_number,
+                    created_at=datetime.now(),
+                    last_accessed_at=datetime.now(),
+                    read=False
+                )
+
+            # Save the message to the database
+            message = Message.objects.create(
+                thread=thread,
+                timestamp=datetime.fromisoformat(timestamp),
+                content=content,
+                message_type=message_type
+            )
+
+            return Response({
+                "message": "Message received and saved.",
+                "data": {
+                    "id": message.id,
+                    "thread_id": thread.id,
+                    "content": message.content,
+                    "timestamp": message.timestamp
+                }
+            }, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
