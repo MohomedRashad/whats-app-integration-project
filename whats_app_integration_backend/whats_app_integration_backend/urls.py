@@ -22,6 +22,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/', include('whats_app.urls')),
     path('api/v1/whatsapp-mock/', include('whatsapp_mock.urls')),
+    path('api/v1/users/', include('users.urls')),
 
     # Documentation URLs
    path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
