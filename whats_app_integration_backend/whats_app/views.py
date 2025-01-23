@@ -33,7 +33,7 @@ class SendMessageView(APIView):
             base_url = settings.BASE_URL
 
             # Construct the mock API URL to simulate sending the message
-            mock_send_url = f"{base_url}/whatsapp_mock/send_message/"
+            mock_send_url = f"{base_url}/whatsapp-mock/send-whatsaap-message/"
 
             # Simulate calling the WhatsApp mock API to send the message
             response = requests.post(mock_send_url, json={
