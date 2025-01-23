@@ -1,4 +1,5 @@
 from django.db import models
+import uuid
 from datetime import datetime
 
 class Thread(models.Model):
@@ -13,6 +14,7 @@ class Thread(models.Model):
 
 class Message(models.Model):
     thread = models.ForeignKey(Thread, on_delete=models.CASCADE, related_name="messages")
+    message_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     timestamp = models.DateTimeField(default=datetime.now)
     content = models.TextField()
     status = models.CharField(max_length=20, choices=[
