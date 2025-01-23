@@ -9,6 +9,7 @@ from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from .models import Thread, Message
 from .serializers import MessageSerializer, ThreadSerializer, ThreadListSerializer
+from users.services import get_user_phone_number
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
@@ -25,7 +26,9 @@ class SendMessageView(APIView):
         Handle the creation of a new message.
         If no thread exists, a new one is created.
         """
-        serializer = MessageSerializer(data=request.data)
+        data = request.data
+        data['sender_number'] = get_user_phone_number(request)
+        serializer = MessageSerializer(data=data)
         if serializer.is_valid():
             message = serializer.save()
 
@@ -129,6 +132,10 @@ class MessageDetailView(APIView):
         if not content:
             return Response({"error": "Content is required to update the message."}, status=status.HTTP_400_BAD_REQUEST)
 
+        sender_number = get_user_phone_number(request)
+        if sender_number != message.thread.sender_number:
+            return Response({"error": "You can only update messages you have sent."}, status=status.HTTP_403_FORBIDDEN)
+
         message.content = content
         message.save()
 
@@ -150,6 +157,10 @@ class MessageDetailView(APIView):
         # Check if the message is older than 1 hour
         if timezone.now() - message.timestamp > timedelta(hours=1):
             return Response({"error": "Message cannot be deleted after 1 hour."}, status=status.HTTP_403_FORBIDDEN)
+
+        sender_number = get_user_phone_number(request)
+        if sender_number != message.thread.sender_number:
+            return Response({"error": "You can only delete messages that you have sent."}, status=status.HTTP_403_FORBIDDEN)
 
         # Delete the message
         message.delete()
