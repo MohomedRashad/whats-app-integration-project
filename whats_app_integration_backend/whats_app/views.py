@@ -2,6 +2,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from uuid import UUID
+from django.conf import settings
+import requests
 from datetime import timedelta, datetime
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
@@ -16,10 +18,7 @@ class SendMessageView(APIView):
         operation_summary="Send a Message",
         operation_description="Create a new message. If no thread exists between the sender and receiver, a new thread is created.",
         request_body=MessageSerializer,
-        responses={
-            201: openapi.Response("Message successfully created", MessageSerializer),
-            400: "Bad Request",
-        },
+        responses={201: openapi.Response("Message successfully created", MessageSerializer), 400: "Bad Request"},
     )
     def post(self, request):
         """
@@ -28,19 +27,62 @@ class SendMessageView(APIView):
         """
         serializer = MessageSerializer(data=request.data)
         if serializer.is_valid():
-            # Save the message and return the appropriate response
             message = serializer.save()
-            return Response({
-                "message_id": message.message_id,
+
+            # Get the base URL from settings
+            base_url = settings.BASE_URL
+
+            # Construct the mock API URL to simulate sending the message
+            mock_send_url = f"{base_url}/whatsapp-mock/send-whatsaap-message/"
+
+            # Simulate calling the WhatsApp mock API to send the message
+            response = requests.post(mock_send_url, json={
                 "thread_id": message.thread.id,
                 "sender_number": message.thread.sender_number,
                 "receiver_number": message.thread.receiver_number,
-                "timestamp": message.timestamp,
                 "content": message.content,
-                "status": message.status,
+                "timestamp": message.timestamp.isoformat(),
                 "message_type": message.message_type,
-            }, status=status.HTTP_201_CREATED)
+            })
+
+            if response.status_code == 200:
+                # Extract message_id from the mock API response
+                mock_response = response.json()
+                mock_message_id = mock_response.get('message', {}).get('message_id')
+                status_from_api = mock_response.get('message', {}).get('status', 'pending')
+
+                if mock_message_id:
+                    # Save the message_id from the mock API response
+                    message.message_id = mock_message_id
+                    message.status = status_from_api  # Use the status returned from the mock API
+                    message.save()
+
+                    # If the status is not 'failed', update all messages in the same thread
+                    if status_from_api != 'failed':
+                        updated_count = Message.objects.filter(thread=message.thread).update(status=status_from_api)
+                        print(f"Updated {updated_count} messages to status '{status_from_api}'.")
+
+                    return Response({
+                        "message_id": message.message_id,
+                        "thread_id": message.thread.id,
+                        "sender_number": message.thread.sender_number,
+                        "receiver_number": message.thread.receiver_number,
+                        "timestamp": message.timestamp,
+                        "content": message.content,
+                        "status": message.status,
+                        "message_type": message.message_type,
+                    }, status=status.HTTP_201_CREATED)
+                else:
+                    return Response({
+                        "error": "Message ID not returned by the mock API"
+                    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            else:
+                return Response({
+                    "error": "Failed to send message via mock API"
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class MessageDetailView(APIView):
     """
@@ -195,7 +237,7 @@ class ThreadDetailView(APIView):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-
+#  Webhook views
 class WhatsAppNotificationWebhookView(APIView):
     @swagger_auto_schema(
         operation_summary="WhatsApp Notification Webhook",
