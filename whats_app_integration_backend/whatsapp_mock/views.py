@@ -8,6 +8,7 @@ from datetime import datetime
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import AllowAny
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
@@ -19,7 +20,8 @@ class SendMessageAPIView(APIView):
     """
     Simulate receiving and sending a message, returning a randomly generated status.
     """
-    
+    permission_classes = [AllowAny]    
+
     @swagger_auto_schema(
         operation_description="Simulates receiving and sending a message with a randomly generated status.",
         responses={
@@ -85,11 +87,9 @@ class SendMessageAPIView(APIView):
             }
             logger.info(f"Message sent successfully with ID: {message_id}, Status: {random_status}")
             return Response(response, status=status.HTTP_200_OK)
-
         except json.JSONDecodeError as e:
             logger.error(f"JSON Decode Error: {str(e)}")
             return Response({"error": "Invalid JSON"}, status=status.HTTP_400_BAD_REQUEST)
-        
         except Exception as e:
             logger.error(f"Unexpected error: {str(e)}")
             return Response({"error": "Internal Server Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
