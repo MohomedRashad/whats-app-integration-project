@@ -24,16 +24,44 @@ Docker Compose is the quickest and easiest way to get the project up and running
 The manual setup provides more control over the environment and is useful for development or debugging. However, it requires manually installing dependencies and configuring the backend and frontend separately.
 
 ###  Setting up with docker and docker-compose
-Before using Docker Compose, you'll need to have Docker installed on your system. You can download Docker from the official website: [https://www.docker.com/products/docker-desktop]  
+1. Before using Docker Compose, you'll need to have Docker installed on your system. You can download Docker from the official website: [https://www.docker.com/products/docker-desktop]  
 In addition to Docker, you'll also need Docker Compose installed. You can find installation instructions for Docker Compose here: [https://docs.docker.com/compose/install/]  
-Once you have Docker Compose set up and your environment configured, you can start the services by running the following command:
+2. Once you have Docker Compose set up and your environment configured, you can start the services by running the following command:
 ```bash
 docker-compose up --build
 ```
-This command will build the Docker images, create the containers, and start the services.
-To access the admin interface, open the frontend at http://localhost:3000 after the services have started. You can log in using the default credentials:
-- Username: admin
-- Password: admin  
+This command will build the Docker images, create the containers, and start the services.  
+3. Create a Superuser
+After the services are up and running, you’ll need to manually create a superuser to access the admin interface. You have two options for how to access the backend container:
+####  Option 1: Use a Separate Terminal Window
+1. 
+Open a new terminal window and run the following command to access the backend container:
+```bash
+docker-compose exec backend /bin/bash
+```
+2.  
+Once inside the container, create the superuser by running:
+```bash
+python manage.py createsuperuser
+```
+You will be prompted to enter the username, and password for the superuser. Follow the prompts to create the superuser account.
+####  Option 2: Run Docker Compose in Detached Mode
+1. 
+Alternatively, you can run Docker Compose in detached mode, which will allow you to keep the backend container running in the background while you continue to use the same terminal window:
+~~~bash
+docker-compose up -d
+```
+2. 
+Once the container is running in detached mode, you can follow the above steps to get into the container and create the superuser by running:
+```bash
+docker-compose exec backend /bin/bash
+python manage.py createsuperuser
+```
+Again, you will be prompted to enter the username and password for the superuser. Complete the prompts to create the superuser.
+3.  Access the Admin Interface
+Once the superuser is created, you can access the admin interface at http://localhost:3000.
+- Username: Your superuser username (e.g., admin)
+- Password: Your superuser password (the one you entered during creation)  
 Note: Docker Compose automatically handles database migrations and creates a superuser (admin/admin) for the backend API.
 
 ###  Manual Setup
