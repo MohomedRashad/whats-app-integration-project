@@ -71,6 +71,14 @@ function Chats({ token, onLogout }) {
           className="bg-white border-end conversation-list"
           style={{ width: '30%', overflowY: 'auto', height: 'calc(100vh - 140px)' }}
         >
+<div className="p-3 border-bottom">
+                <button
+                  className="btn btn-primary"
+                  onClick={handleNewChatClick}
+                >
+                  Start New Chat
+                </button>
+                </div>
           {error ? (
             <div className="alert alert-danger" role="alert">
               {error}
@@ -79,13 +87,7 @@ function Chats({ token, onLogout }) {
             <div className="d-flex align-items-center justify-content-center h-100">
               <div className="text-center">
                 <h5>No chats available.</h5>
-                <p>Click the button below to start a new chat.</p>
-                <button
-                  className="btn btn-primary"
-                  onClick={handleNewChatClick}
-                >
-                  Start New Chat
-                </button>
+                <p>Click the new chat button to start a new chat.</p>
               </div>
             </div>
           ) : (
