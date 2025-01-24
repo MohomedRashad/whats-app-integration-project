@@ -9,6 +9,7 @@ from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from .models import Thread, Message
 from .serializers import MessageSerializer, ThreadSerializer, ThreadListSerializer
+from .services import send_message_to_mock_api
 from users.services import get_user_phone_number
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -31,36 +32,18 @@ class SendMessageView(APIView):
         serializer = MessageSerializer(data=data)
         if serializer.is_valid():
             message = serializer.save()
+            mock_response = send_message_to_mock_api(message)  # Call the service
 
-            # Get the base URL from settings
-            base_url = settings.BASE_URL
-
-            # Construct the mock API URL to simulate sending the message
-            mock_send_url = f"{base_url}/whatsapp-mock/send-whatsaap-message/"
-
-            # Simulate calling the WhatsApp mock API to send the message
-            response = requests.post(mock_send_url, json={
-                "thread_id": message.thread.id,
-                "sender_number": message.thread.sender_number,
-                "receiver_number": message.thread.receiver_number,
-                "content": message.content,
-                "timestamp": message.timestamp.isoformat(),
-                "message_type": message.message_type,
-            })
-
-            if response.status_code == 200:
-                # Extract message_id from the mock API response
-                mock_response = response.json()
-                mock_message_id = mock_response.get('message', {}).get('message_id')
-                status_from_api = mock_response.get('message', {}).get('status', 'pending')
+            if mock_response and mock_response.status_code == 200:
+                mock_data = mock_response.json()
+                mock_message_id = mock_data.get('message', {}).get('message_id')
+                status_from_api = mock_data.get('message', {}).get('status', 'pending')
 
                 if mock_message_id:
-                    # Save the message_id from the mock API response
                     message.message_id = mock_message_id
-                    message.status = status_from_api  # Use the status returned from the mock API
+                    message.status = status_from_api
                     message.save()
 
-                    # If the status is not 'failed', update all messages in the same thread
                     if status_from_api != 'failed':
                         updated_count = Message.objects.filter(thread=message.thread).update(status=status_from_api)
                         print(f"Updated {updated_count} messages to status '{status_from_api}'.")

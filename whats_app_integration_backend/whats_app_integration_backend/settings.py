@@ -194,5 +194,6 @@ SIMPLE_JWT = {
     'JTI_CLAIM': 'jti',
 }
 
-BASE_URL = 'http://localhost:8000/api/v1'
 AUTH_USER_MODEL = 'users.User'
+BASE_URL = 'http://localhost:8000/api/v1'
+WHATSAPP_MOCK_API_SEND_MESSAGE = f"{BASE_URL}/whatsapp-mock/send-whatsaap-message/"
