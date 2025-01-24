@@ -30,7 +30,7 @@ In addition to Docker, you'll also need Docker Compose installed. You can find i
 ```bash
 docker-compose up --build
 ```
-This command will build the Docker images, create the containers, and start the services.
+This command will build the Docker images, create the containers, and start the services.  
 3. Create a Superuser
 After the services are up and running, you’ll need to manually create a superuser to access the admin interface. You have two options for how to access the backend container:
 ####  Option 1: Use a Separate Terminal Window
@@ -52,9 +52,10 @@ Alternatively, you can run Docker Compose in detached mode, which will allow you
 docker-compose up -d
 ```
 2. 
-Once the backend is running in detached mode, you can create the superuser by running the following command in the same terminal window:
+Once the container is running in detached mode, you can follow the above steps to get into the container and create the superuser by running:
 ```bash
-docker-compose exec backend python manage.py createsuperuser
+docker-compose exec backend /bin/bash
+python manage.py createsuperuser
 ```
 Again, you will be prompted to enter the username and password for the superuser. Complete the prompts to create the superuser.
 3.  Access the Admin Interface
