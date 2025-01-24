@@ -1,0 +1,25 @@
+services:
+  backend:
+    build:
+      context: ./whats_app_integration_backend
+    container_name: whats_app_backend
+    ports:
+      - "8000:8000"
+    networks:
+      - whatsapp_network
+    environment:
+      - DB_NAME=sqlite
+      - DB_PATH=/app/db.sqlite3
+
+  frontend:
+    build:
+      context: ./whats_app_integration_frontend
+    container_name: whats_app_frontend
+    ports:
+      - "3000:3000"
+    networks:
+      - whatsapp_network
+
+networks:
+  whatsapp_network:
+    driver: bridge
