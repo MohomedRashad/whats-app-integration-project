@@ -3,7 +3,7 @@ This repository demonstrates the integration of WhatsApp messaging into a custom
 -   **Backend:** A Django REST API handling messaging logic, data storage, and interactions with a simulated WhatsApp API.
 -  **Frontend:** A React application providing an admin interface for customer support activities, including authentication and communication.
 ## Features
-*-   Simulates WhatsApp messaging using a mock API.
+-   Simulates WhatsApp messaging using a mock API.
 -   Exposes endpoints for sending and receiving messages.
 - Implements a mock webhook to simulate WhatsApp events, including message status updates and incoming WhatsApp messages.
 -   Handles user authentication and message persistence.
