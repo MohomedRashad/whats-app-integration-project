@@ -33,7 +33,7 @@ docker-compose up --build
 This command will build the Docker images, create the containers, and start the services.
 To access the admin interface, open the frontend at http://localhost:3000 after the services have started. You can log in using the default credentials:
 - Username: admin
-- Password: admin
+- Password: admin  
 Note: Docker Compose automatically handles database migrations and creates a superuser (admin/admin) for the backend API.
 
 ###  Manual Setup
