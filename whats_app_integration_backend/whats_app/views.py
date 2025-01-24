@@ -177,7 +177,7 @@ class ThreadListView(APIView):
         }
     )
     def get(self, request):
-        threads = Thread.objects.all().order_by('-created_at')
+        threads = Thread.objects.all()
         serializer = ThreadListSerializer(threads, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
