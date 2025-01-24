@@ -63,9 +63,10 @@ function Chats({ token, onLogout }) {
     <div className="d-flex bg-light">
       <Navbar />
       <div className="container-fluid d-flex">
-      <div className="flex-grow-2 p-4">
-        <PageHeader title="Chat" onLogout={onLogout} />
-</div>
+        <div className="flex-grow-2 p-4">
+          <PageHeader title="Chat" onLogout={onLogout} />
+        </div>
+
         <div
           className="bg-white border-end conversation-list"
           style={{ width: '30%', overflowY: 'auto', height: 'calc(100vh - 140px)' }}
@@ -74,6 +75,19 @@ function Chats({ token, onLogout }) {
             <div className="alert alert-danger" role="alert">
               {error}
             </div>
+          ) : threads.length === 0 ? (
+            <div className="d-flex align-items-center justify-content-center h-100">
+              <div className="text-center">
+                <h5>No chats available.</h5>
+                <p>Click the button below to start a new chat.</p>
+                <button
+                  className="btn btn-primary"
+                  onClick={handleNewChatClick}
+                >
+                  Start New Chat
+                </button>
+              </div>
+            </div>
           ) : (
             <ConversationList
               threads={threads}
@@ -81,6 +95,7 @@ function Chats({ token, onLogout }) {
             />
           )}
         </div>
+
         <div
           className="chat-window bg-light flex-grow-1"
           style={{ height: 'calc(100vh - 140px)', overflowY: 'auto' }}
@@ -95,15 +110,6 @@ function Chats({ token, onLogout }) {
         </div>
       </div>
       <Footer />
-
-      {/* Button to start new chat */}
-      <button
-        className="btn btn-primary"
-        onClick={handleNewChatClick}
-        style={{ position: 'fixed', bottom: '20px', right: '20px' }}
-      >
-        Start New Chat
-      </button>
 
       {/* Modal for new chat */}
       {showModal && (

@@ -1,5 +1,4 @@
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-console.log("API_BASE_URL:", API_BASE_URL); // Log the base URL
 
 const loginUser = async (username, password) => {
   try {
@@ -10,9 +9,6 @@ const loginUser = async (username, password) => {
       },
       body: JSON.stringify({ username, password }),
     });
-
-    // Log the entire response object for debugging
-    console.log("Response:", response);
 
     // Log the status code and the response body if it's OK
     if (!response.ok) {
